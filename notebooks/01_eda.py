@@ -159,6 +159,6 @@ Fingerprints de morgan, descritores de lipinski e outros descritores fisico-quim
 
 # %%
 from pathlib import Path
-filepath = Path('../data/processed.csv')
+filepath = Path('../data/interim/cleaned_data.csv')
 filepath.parent.mkdir(parents=True, exist_ok=True)
 df_clean.to_csv(filepath)

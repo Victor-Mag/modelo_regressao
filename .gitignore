@@ -1,10 +1,5 @@
-#VScode
-.vscode/
-
-# Python Cache
-__pycache__/
-
-# Mais todos esses
+*.vscode/
+*__pycache__/
 *.csv
 *.db
 *.xlsx
