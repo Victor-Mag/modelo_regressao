@@ -88,8 +88,8 @@ df3['pic50'] = -np.log10(df3['standard_value'] * 1e-9)
 df3.head()
 # %%
 
-plt.hist(df3['pIC50'].dropna(), bins=50)
-plt.xlabel('pIC50')
+plt.hist(df3['pic50'].dropna(), bins=50)
+plt.xlabel('pic50')
 plt.show()
 # %%
 
