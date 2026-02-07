@@ -1,5 +1,7 @@
 # %%
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 # %%
 df_raw = pd.read_csv("../data/raw.csv", sep=",")
 df_raw.head()
@@ -44,14 +46,14 @@ print(f"Assimetria: {df3['standard_value'].skew()}")
 print(f"Curtose: {df3['standard_value'].kurt()}")
 
 #%%
-import matplotlib.pyplot as plt
+
 df3['standard_value'].plot.kde()
 #plt.xscale('log')
 plt.semilogx()
 plt.show()
 
 # %%
-import numpy as np
+
 
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 4))
@@ -59,7 +61,7 @@ fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 # Distribuição original
 axes[0].hist(df3['standard_value'].dropna(), bins=50)
 axes[0].set_xlabel('IC50 (escala linear)')
-axes[0].set_title('Original - MUITO assimétrico!')
+axes[0].set_title('Original')
 
 # Log scale
 axes[1].hist(np.log10(df3['standard_value'].dropna()), bins=50)
@@ -69,7 +71,7 @@ axes[1].set_title('Escala log10')
 # Boxplot para ver outliers
 axes[2].boxplot(np.log10(df3['standard_value'].dropna()))
 axes[2].set_ylabel('log10(IC50)')
-axes[2].set_title('Outliers?')
+axes[2].set_title('Outliers')
 
 plt.tight_layout()
 plt.show()
@@ -99,6 +101,12 @@ print(f"Potente (6 < pIC50 ≤ 7): {(df3['pic50'].between(6, 7)).sum()}")
 print(f"Moderado (5 < pIC50 ≤ 6): {(df3['pic50'].between(5, 6)).sum()}")
 print(f"Fraco (4 < pIC50 ≤ 5): {(df3['pic50'].between(4, 5)).sum()}")
 print(f"Inativo (pIC50 ≤ 4): {(df3['pic50'] <= 4).sum()}")
+print(f"Soma total: {(df3['pic50'].count())}")
+# %%
+print(f"Compostos com pIC50 >= 8: {(df3['pic50'] == 8).sum()}")
+
+
+
 
 #%%
 

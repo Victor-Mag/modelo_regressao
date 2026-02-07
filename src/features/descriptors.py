@@ -51,6 +51,12 @@ print(f"\nVerificação de dados:")
 print(f"  NaN em X: {np.isnan(X).sum()}")
 print(f"  Inf em X: {np.isinf(X).sum()}")
 print(f"  NaN em y: {np.isnan(y).sum()}")
+# %%
+print(f"\nEstatísticas dos fingerprints:")
+print(f"Features não nulas por molécula (média): {X.sum(axis=1).mean():.1f}")
+print(f"Densidade de Features: {X.mean():.3f}")  # Fraction of bits that are 1
+print(f"Uso de memória: {(X.nbytes + y.nbytes) / 1024**2:.1f} MB")
+
 
 # %%
 '''
@@ -61,6 +67,7 @@ df_processado = pd.DataFrame(X)
 df_processado['pic50'] = y
 df_processado['smiles'] = smiles_validos
 
+# %%
 df_processado.to_parquet('../../data/processed.parquet', index=False)
 
 # %%
