@@ -1,4 +1,5 @@
 # %%
+from sklearn.preprocessing import StandardScaler
 from tqdm.auto import tqdm
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
@@ -77,7 +78,7 @@ Salvando todos os descritores físico-quimicos (1D) em outro parquet
 para comparar o modelo usando fingerprints de morgan x descritores físico-quimicos
 '''
 
-df_desc = df2.copy()
+df_desc = df.copy()
 df_desc.head()
 
 # %%
@@ -111,7 +112,6 @@ df_desc = df_desc.drop(columns=['props'])
 df_desc.head()
 
 
-
 # %%
 '''
 Aplicando scaler em outro dataframe desses descritores para verificar qual tem melhor desempenho
@@ -120,21 +120,20 @@ df_desc.columns
 
 
 # %%
-from sklearn.preprocessing import StandardScaler
 
 scaler = StandardScaler()
 
 df_desc_scaled = scaler.fit_transform(df_desc[['exactmw', 'amw', 'lipinskiHBA',
-       'lipinskiHBD', 'NumRotatableBonds', 'NumHBD', 'NumHBA', 'NumHeavyAtoms',
-       'NumAtoms', 'NumHeteroatoms', 'NumAmideBonds', 'FractionCSP3',
-       'NumRings', 'NumAromaticRings', 'NumAliphaticRings',
-       'NumSaturatedRings', 'NumHeterocycles', 'NumAromaticHeterocycles',
-       'NumSaturatedHeterocycles', 'NumAliphaticHeterocycles', 'NumSpiroAtoms',
-       'NumBridgeheadAtoms', 'NumAtomStereoCenters',
-       'NumUnspecifiedAtomStereoCenters', 'labuteASA', 'tpsa', 'CrippenClogP',
-       'CrippenMR', 'chi0v', 'chi1v', 'chi2v', 'chi3v', 'chi4v', 'chi0n',
-       'chi1n', 'chi2n', 'chi3n', 'chi4n', 'hallKierAlpha', 'kappa1', 'kappa2',
-       'kappa3', 'Phi']])
+                                               'lipinskiHBD', 'NumRotatableBonds', 'NumHBD', 'NumHBA', 'NumHeavyAtoms',
+                                               'NumAtoms', 'NumHeteroatoms', 'NumAmideBonds', 'FractionCSP3',
+                                               'NumRings', 'NumAromaticRings', 'NumAliphaticRings',
+                                               'NumSaturatedRings', 'NumHeterocycles', 'NumAromaticHeterocycles',
+                                               'NumSaturatedHeterocycles', 'NumAliphaticHeterocycles', 'NumSpiroAtoms',
+                                               'NumBridgeheadAtoms', 'NumAtomStereoCenters',
+                                               'NumUnspecifiedAtomStereoCenters', 'labuteASA', 'tpsa', 'CrippenClogP',
+                                               'CrippenMR', 'chi0v', 'chi1v', 'chi2v', 'chi3v', 'chi4v', 'chi0n',
+                                               'chi1n', 'chi2n', 'chi3n', 'chi4n', 'hallKierAlpha', 'kappa1', 'kappa2',
+                                               'kappa3', 'Phi']])
 
 # %%
 print(df_desc_scaled)
@@ -148,25 +147,26 @@ print(f"Existem cerca de {itens_por_linha} itens em {rows} colunas")
 # %%
 
 cols = ['exactmw', 'amw', 'lipinskiHBA',
-       'lipinskiHBD', 'NumRotatableBonds', 'NumHBD', 'NumHBA', 'NumHeavyAtoms',
-       'NumAtoms', 'NumHeteroatoms', 'NumAmideBonds', 'FractionCSP3',
-       'NumRings', 'NumAromaticRings', 'NumAliphaticRings',
-       'NumSaturatedRings', 'NumHeterocycles', 'NumAromaticHeterocycles',
-       'NumSaturatedHeterocycles', 'NumAliphaticHeterocycles', 'NumSpiroAtoms',
-       'NumBridgeheadAtoms', 'NumAtomStereoCenters',
-       'NumUnspecifiedAtomStereoCenters', 'labuteASA', 'tpsa', 'CrippenClogP',
-       'CrippenMR', 'chi0v', 'chi1v', 'chi2v', 'chi3v', 'chi4v', 'chi0n',
-       'chi1n', 'chi2n', 'chi3n', 'chi4n', 'hallKierAlpha', 'kappa1', 'kappa2',
-       'kappa3', 'Phi']
+        'lipinskiHBD', 'NumRotatableBonds', 'NumHBD', 'NumHBA', 'NumHeavyAtoms',
+        'NumAtoms', 'NumHeteroatoms', 'NumAmideBonds', 'FractionCSP3',
+        'NumRings', 'NumAromaticRings', 'NumAliphaticRings',
+        'NumSaturatedRings', 'NumHeterocycles', 'NumAromaticHeterocycles',
+        'NumSaturatedHeterocycles', 'NumAliphaticHeterocycles', 'NumSpiroAtoms',
+        'NumBridgeheadAtoms', 'NumAtomStereoCenters',
+        'NumUnspecifiedAtomStereoCenters', 'labuteASA', 'tpsa', 'CrippenClogP',
+        'CrippenMR', 'chi0v', 'chi1v', 'chi2v', 'chi3v', 'chi4v', 'chi0n',
+        'chi1n', 'chi2n', 'chi3n', 'chi4n', 'hallKierAlpha', 'kappa1', 'kappa2',
+        'kappa3', 'Phi']
 
 for i in df_desc_scaled:
     for j in i:
-        df_scaled = pd.DataFrame(df_desc_scaled, columns = cols)
+        df_scaled = pd.DataFrame(df_desc_scaled, columns=cols)
 # %%
 df_scaled.head()
 
 # %%
-df_scaled_comb = pd.concat([df_scaled, df_desc[['canonical_smiles', 'pic50']]], axis=1)
+df_scaled_comb = pd.concat(
+    [df_scaled, df_desc[['canonical_smiles', 'pic50']]], axis=1)
 df_scaled_comb.columns
 
 # %%
