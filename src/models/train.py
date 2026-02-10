@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn.model_selection import learning_curve
 from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_score
+from bayes_opt import BayesianOptimization
 
 df = pd.read_parquet('../../data/processed.parquet')
 # %%
@@ -19,6 +20,7 @@ df = df.drop(columns='smiles')
 df.columns
 
 # %%
+
 X = df.drop(columns='pic50')  # apenas covariaveis
 y = df['pic50']  # pic50 é o target
 # %%
@@ -36,6 +38,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 X_train.shape, y_train.shape, X_test.shape, y_test.shape
 
 # %%
+
 
 lista_modelos = {
     'RandomForest': RandomForestRegressor(n_estimators=100,
@@ -95,16 +98,6 @@ for nome, modelo in lista_modelos.items():
     plt.legend()
     plt.show()
 
-
-# %%
-# Treinamento e Avaliação com Random Forest
-
-rf = RandomForestRegressor(n_estimators=100,
-                           random_state=42,
-                           n_jobs=-1,
-                           criterion='squared_error')
-
-
 # %%
 train_sizes, train_scores, val_scores = learning_curve(estimator=rf,
                                                        X=X,
@@ -146,8 +139,92 @@ plt.show()
 
 
 # %%
+
+def rf_bayes(n_estimators, max_depth, min_samples_split, max_features):
+    '''Função que recebe hiperparâmetros pra random forest e retorna
+    o erro absoluto'''
+    model = RandomForestRegressor(n_estimators=int(n_estimators),
+                                  max_depth=int(max_depth),
+                                  min_samples_split=int(min_samples_split),
+                                  max_features=min(max_features, 0.999),
+                                  random_state=42)
+    return cross_val_score(model,
+                           X_train,
+                           y_train,
+                           cv=5,
+                           scoring='neg_mean_absolute_error').mean()
+
+
+def xgb_bayes(learning_rate, n_estimators, max_depth, subsample, colsample_bytree, gamma):
+    # XGBoost exige inteiros para n_estimators e max_depth
+    model_xgb = XGBRegressor(
+        learning_rate=learning_rate,
+        n_estimators=int(n_estimators),
+        max_depth=int(max_depth),
+        subsample=subsample,
+        colsample_bytree=colsample_bytree,
+        gamma=gamma,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    # Retorna a média do Cross Validation (buscando maximizar o R2 ou minimizar erro)
+    return cross_val_score(model_xgb, X_train, y_train, cv=5, scoring='r2').mean()
+
+
+# %%
+parametros = {
+    'n_estimators': (10, 250),
+    'max_depth': (1, 50),
+    'min_samples_split': (2, 25),
+    'max_features': (0.1, 0.999)
+}
+
+otimizador = BayesianOptimization(
+    f=rf_bayes, pbounds=parametros, random_state=42)
+otimizador.maximize(init_points=10, n_iter=40)
+
+best_params = otimizador.max['params']
+best_params
+
+
+rf_best_params = {
+    'n_estimators': int(best_params['n_estimators']),
+    'max_depth': int(best_params['max_depth']),
+    'min_samples_split': int(best_params['min_samples_split']),
+    'max_features': best_params['max_features'],
+}
+
+# %%
+# Otimização do XGBoost
+parametros_xgb = {
+    'learning_rate': (0.01, 0.3),
+    'n_estimators': (100, 1000),
+    'max_depth': (3, 10),
+    'subsample': (0.6, 1.0),
+    'colsample_bytree': (0.5, 1.0),
+    'gamma': (0, 5)
+}
+
+otimizador_xgb = BayesianOptimization(
+    f=xgb_bayes, pbounds=parametros_xgb, random_state=42)
+otimizador_xgb.maximize(init_points=10, n_iter=40)
+
+best_params = otimizador_xgb.max['params']
+best_params
+
+xgb_best_params = {
+    'learning_rate': best_params['learning_rate'],
+    'n_estimators': int(best_params['n_estimators']),
+    'max_depth': int(best_params['max_depth']),
+    'subsample': best_params['subsample'],
+    'colsample_bytree': best_params['colsample_bytree'],
+    'gamma': best_params['gamma']
+}
+
+# %%
 # Calculando Q^2 (R2 de validação cruzada)
-rf = RandomForestRegressor(n_estimators=100,
+rf = RandomForestRegressor(**rf_best_params,
                            random_state=42,
                            n_jobs=-1,
                            criterion='absolute_error')
@@ -172,10 +249,9 @@ plt.show()
 
 
 # %%
-
-modelo_xgb = XGBRegressor(n_estimators=100,
-                           random_state=42,
-                            n_jobs=-1)
+modelo_xgb = XGBRegressor(**xgb_best_params,
+                          random_state=42,
+                          n_jobs=-1)
 
 # Calculando Q^2 para XGBoost
 scores_xgb = cross_val_score(modelo_xgb, X_train, y_train, cv=5, scoring='r2')
